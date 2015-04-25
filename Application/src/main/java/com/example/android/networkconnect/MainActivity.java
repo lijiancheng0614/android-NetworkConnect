@@ -22,6 +22,7 @@ import android.support.v4.app.FragmentActivity;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 
 import com.example.android.common.logger.Log;
 import com.example.android.common.logger.LogFragment;
@@ -77,9 +78,10 @@ public class MainActivity extends FragmentActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             // When the user clicks FETCH, fetch the first 500 characters of
-            // raw HTML from www.google.com.
+            // raw HTML from editText
             case R.id.fetch_action:
-                new DownloadTask().execute("http://www.google.com");
+                EditText editText = (EditText)findViewById(R.id.textView);
+                new DownloadTask().execute(editText.getText().toString());
                 return true;
             // Clear the log view fragment.
             case R.id.clear_action:
