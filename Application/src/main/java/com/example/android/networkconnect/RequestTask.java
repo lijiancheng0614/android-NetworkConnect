@@ -2,8 +2,6 @@ package com.example.android.networkconnect;
 
 import android.os.AsyncTask;
 
-import com.example.android.common.logger.Log;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,10 +14,15 @@ import java.net.URL;
  */
 public class RequestTask extends AsyncTask<String, Integer, String> {
 
-    public static final String TAG = "DownloadTask";
+    public static final String TAG = "RequestTask";
     private static final int CONNECT_TIMEOUT = 15000 /* milliseconds */;
     private static final int BUFFER_SIZE = 32;
     private boolean isPost = false;
+    private RequestTaskListener mListener;
+
+    public RequestTask(RequestTaskListener mListener) {
+        this.mListener = mListener;
+    }
 
     /**
      * Set POST method.
@@ -54,10 +57,22 @@ public class RequestTask extends AsyncTask<String, Integer, String> {
     }
 
     @Override
-    protected void onPostExecute(String result) {
-        Log.i(TAG, result);
+    protected void onPreExecute() {
+        super.onPreExecute();
+        mListener.onTaskStart();
     }
 
+    @Override
+    protected void onPostExecute(String result) {
+        super.onPostExecute(result);
+        mListener.onTaskFinished(result);
+    }
+
+    @Override
+    protected void onCancelled() {
+        super.onCancelled();
+        mListener.onTaskCancelled();
+    }
 
     // === Network Connection
 
@@ -139,7 +154,7 @@ public class RequestTask extends AsyncTask<String, Integer, String> {
     @Override
     protected void onProgressUpdate(Integer... values) {
         super.onProgressUpdate(values);
-        Log.i(TAG, "Progress: " + values[0]);
+        mListener.onTaskUpdate(values[0]);
     }
 
     /**

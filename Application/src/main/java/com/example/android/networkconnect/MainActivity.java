@@ -72,7 +72,27 @@ public class MainActivity extends FragmentActivity {
             // raw HTML from editText
             case R.id.fetch_action:
                 EditText editText = (EditText) findViewById(R.id.textView);
-                new RequestTask().execute(editText.getText().toString());
+                new RequestTask(new RequestTaskListener() {
+                    @Override
+                    public void onTaskStart() {
+                        Log.i(TAG, "Start request...");
+                    }
+
+                    @Override
+                    public void onTaskUpdate(int value) {
+                        Log.i(TAG, "Progress: " + value);
+                    }
+
+                    @Override
+                    public void onTaskFinished(String result) {
+                        Log.i(TAG, "Result: " + result.substring(0, Math.min(result.length(), 100)));
+                    }
+
+                    @Override
+                    public void onTaskCancelled() {
+                        Log.i(TAG, "The task is cancelled.");
+                    }
+                }).execute(editText.getText().toString());
                 return true;
             // Clear the log view fragment.
             case R.id.clear_action:
