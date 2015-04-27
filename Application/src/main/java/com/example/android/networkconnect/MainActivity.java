@@ -72,7 +72,7 @@ public class MainActivity extends FragmentActivity {
             // raw HTML from editText
             case R.id.fetch_action:
                 EditText editText = (EditText) findViewById(R.id.textView);
-                new DownloadTask().execute(editText.getText().toString());
+                new RequestTask().execute(editText.getText().toString());
                 return true;
             // Clear the log view fragment.
             case R.id.clear_action:
