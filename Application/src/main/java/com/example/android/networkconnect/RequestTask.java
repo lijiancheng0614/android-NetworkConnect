@@ -14,7 +14,7 @@ import java.net.URL;
 /**
  * Implementation of AsyncTask, to fetch the data in the background away from the UI thread.
  */
-public class RequestTask extends AsyncTask<String, Void, String> {
+public class RequestTask extends AsyncTask<String, Integer, String> {
 
     public static final String TAG = "DownloadTask";
     private static final int CONNECT_TIMEOUT = 15000 /* milliseconds */;
@@ -34,30 +34,32 @@ public class RequestTask extends AsyncTask<String, Void, String> {
     protected String doInBackground(String... strings) {
         try {
             String result = "";
-
-            HttpURLConnection conn;
-            if (isPost) {
-                conn = doPost(strings[0], strings[1]);
-            } else {
-                conn = doGet(strings[0]);
-            }
+            if (!updateProgress(25))
+                return result;
+            HttpURLConnection conn = isPost ? doPost(strings[0], strings[1]) : doGet(strings[0]);
+            if (!updateProgress(50))
+                return result;
             // Success HTTP Status Code
             if (conn.getResponseCode() / 100 != 2)
                 return result;
+            if (!updateProgress(75))
+                return result;
             result = getStringFromStream(conn.getInputStream());
+            if (!updateProgress(100))
+                return result;
             return result;
         } catch (IOException e) {
             return e.getLocalizedMessage();
         }
     }
 
-    /**
-     * Uses the logging framework to display the output of the fetch operation in the log fragment.
-     */
     @Override
     protected void onPostExecute(String result) {
         Log.i(TAG, result);
     }
+
+
+    // === Network Connection
 
     /**
      * Given a string representation of a URL, sets up a connection for GET request.
@@ -69,7 +71,7 @@ public class RequestTask extends AsyncTask<String, Void, String> {
     private HttpURLConnection doGet(String urlString) throws IOException {
         URL url = new URL(urlString);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setConnectTimeout(15000 /* milliseconds */);
+        conn.setConnectTimeout(CONNECT_TIMEOUT);
         conn.setRequestMethod("GET");
         conn.setDoInput(true);
         conn.connect();
@@ -111,17 +113,45 @@ public class RequestTask extends AsyncTask<String, Void, String> {
      * @throws java.io.IOException
      */
     private String getStringFromStream(InputStream inputStream) throws IOException {
-        InputStreamReader isr = new InputStreamReader(inputStream, "UTF-8");
-        StringBuilder sb = new StringBuilder(BUFFER_SIZE);
-        char[] buffer = new char[BUFFER_SIZE];
-        int length;
-        while ((length = isr.read(buffer, 0, BUFFER_SIZE)) != -1) {
-            sb.append(buffer, 0, length);
-            if (isCancelled())
-                return null;
+        StringBuilder sb = null;
+        InputStreamReader isr = null;
+        try {
+            isr = new InputStreamReader(inputStream, "UTF-8");
+            sb = new StringBuilder(BUFFER_SIZE);
+            char[] buffer = new char[BUFFER_SIZE];
+            int length;
+            while ((length = isr.read(buffer, 0, BUFFER_SIZE)) != -1) {
+                sb.append(buffer, 0, length);
+                if (isCancelled())
+                    return null;
+            }
+            inputStream.close();
+        } finally {
+            if (isr != null)
+                isr.close();
         }
-        inputStream.close();
-        isr.close();
         return sb.toString();
+    }
+
+
+    // === Progress
+
+    @Override
+    protected void onProgressUpdate(Integer... values) {
+        super.onProgressUpdate(values);
+        Log.i(TAG, "Progress: " + values[0]);
+    }
+
+    /**
+     * Update progress.
+     *
+     * @param progress Task progress estimated by an integer.
+     * @return false if cancelled.
+     */
+    private boolean updateProgress(int progress) {
+        if (isCancelled())
+            return false;
+        publishProgress(progress);
+        return true;
     }
 }
