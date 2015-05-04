@@ -98,6 +98,20 @@ public class MainActivity extends FragmentActivity {
             case R.id.clear_action:
                 mLogFragment.getLogView().setText("");
                 return true;
+            // Download
+            case R.id.download_action:
+                String uri = ((EditText) findViewById(R.id.textView)).getText().toString();
+                try {
+                    new DownloadHelper(this, uri, new DownloadHelper.DownloadDoneCallback() {
+                        @Override
+                        public void onDownloadDone() {
+                            Log.i(TAG, "Download success.");
+                        }
+                    }).start();
+                } catch (Exception e) {
+                    Log.i(TAG, "Error: " + e.getLocalizedMessage());
+                }
+                return true;
         }
         return false;
     }
